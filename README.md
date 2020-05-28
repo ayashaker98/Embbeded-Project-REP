@@ -1,14 +1,14 @@
 
-Overview:
+##Overview:
 
  For my project I\'92ve chosen to implement a simple heart monitor, using the ECG Sensor AD8232, and STM32 Microcontroller. The Electrodes are placed on someone for the ECG to detect the heart beat, and then the output from the ECG Sensor is sent as an analog signal to the STM32 Microcontroller. There are two ADC\'92s located on the microcontroller, so I used the first ADC , and I connected the output from the sensor to it through pin A0. Then I perform the computation on the microcontroller and then the result is send to the PC using UART, where I display the heart beat live and then view the computed Beats Per Minute
  
-Hardware/Pins:
+##Hardware/Pins:
 
 The ECG sensor outputs an analog signal, so I will use an ADC 3202/On Chip ADC, to convert the signal coming out of the ECG sensor before it is sent to the Microcontroller.
 The ECG sensor has 15 pins. I will only be using 3-pins, GND, 3.3v, output. LO-, LO+, and SDN. LO-, and LO+ are leads -off comparators, LO- is always low, and LOD+ will be high. To detect leadoff, the ECG monitors the impedance between each differential-sensing electrode and the lead-off electrode.  The impendence measurement provides an input for measuring the respiration rate. The pint OUT outputs the fully conditioned heart. Rate signal which will be connected to an ADC. The also wont be using the SDN pin, because its useful only for low-power applications. So the LO-, LO+ and OUT pins will be inputs to the PC. 
 
-Code Walkthrough
+##Code Walkthrough
 C Code:
 In order for us to be able to time the data coming in and sample it for one minute, I used systick timer. So first of all I configure the Systick clock, by dividing the SystemCoreClocck by 1000, to transform it a millisecond delay between each consecutive ticks. Then in the SysTick Handler, I start incrementing a counter variable called myTick, that increments every millisecond. So to achieve a minute I need myTick to keep ticking until 60000, which means that I have read enough data for 1 minute. So what I do is poll for conversion using the ADC located on the micontroller and read the value from it. It reads the first sample and I have a flag which is set to one initially. Every time it detects a falling edge it is set to 1 and everytime theres a high edge higher than 2500 it is set to 0, and I do that so that I\'92d be able to get the Beats Per minute, wbich I will discuss more in details in the following sections. After that I transmit the value I received from the ADC to the terminal using UART. After I sample for one minute I transmit the beats per minute. 
 
