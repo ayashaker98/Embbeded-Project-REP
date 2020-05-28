@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include <cmath>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,10 +45,13 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
+char ss[]="";
 TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart1;
-/* USER CODE BEGIN PV */
+int start;
+int samplingrate;
 
+/* USER CODE BEGIN PV */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,24 +75,72 @@ uint32_t hexToAscii(uint8_t n)//4-bit hex value converted to an ascii character
  else n = n - 10 + 'A';
  return n;
 }
+	uint8_t r[1];
+	uint32_t sum = 0;
+	//out[2];
+	char out[6];
+	char out2[7];
+	
+	char e[] = "BPM: ";
+	float write = 0.0;
+	float val  = 0.0;
+	int counter = 0;
+	int flag = 0;
+	int flag1 = 0;
+
+
+int s = 0;
+int flag3 = 1;
+
+//int samplingrate = 0;
+
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
+		  HAL_IncTick();
+	double previous = 0.0;
+	if(start == 1)
+		
+	{
+		
+		myTick++;
+		if((myTick<60000) && (flag == 0) && (myTick%samplingrate == 0))
+		{
+			adc_value = HAL_ADC_GetValue(&hadc1); //get the value
+			if((flag3 == 1) && (adc_value>2500))
+			{
+				counter++;
+				flag3 = 0;
+			}
+			if(adc_value<500)
+			{
+				flag3 = 1;
+			}
+			previous = adc_value;
+			sprintf(out,"%d\r\n",adc_value);
+			HAL_UART_Transmit(&huart1,(uint8_t *) out,strlen(out),10);
+		}	
+		if((myTick >= 60000) && (flag == 0))
+		{ 
+				flag = 1;
+				HAL_ADC_Stop(&hadc1); // stop adc
+			  sprintf(out2,"BPM : %d",counter);
+				HAL_UART_Transmit(&huart1,(uint8_t *) out2,strlen(out2),10);
+		}
+		
+	}
+}
   /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-	myTick++;
+
   /* USER CODE BEGIN SysTick_IRQn 1 */
   /* USER CODE END SysTick_IRQn 1 */
-}
 
-//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-//{
-//	adc_value = HAL_ADC_GetValue(&hadc1);
-//}
-//uint8_t r[1];
-//	//out[2];
-//	char out[7];
-//	float write = 0.0;
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+		HAL_UART_Receive_IT(&huart1,(uint8_t *) ss,sizeof(ss)); 
+	
+}	
 /* USER CODE END 0 */
 
 /**
@@ -111,18 +163,11 @@ int main(void)
   /* USER CODE END Init */
 
   /* Configure the system clock */
-// SysTick->CTRL = 0;
-//	SysTick->LOAD = 7200000-1;
-//	SysTick->VAL = 0;
-//	SysTick->CTRL = 7;
-//	
-	
+  SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-	
-	
  SystemClock_Config();
-SysTick_Config(	SystemCoreClock/1000);
+ SysTick_Config(SystemCoreClock/1000);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -131,64 +176,20 @@ SysTick_Config(	SystemCoreClock/1000);
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   MX_TIM2_Init();
-	HAL_ADC_Start_IT(&hadc1);
+	HAL_UART_Receive_IT(&huart1,(uint8_t *) ss,sizeof(ss)); 
   /* USER CODE BEGIN 2 */
-//	HAL_TIM_Base_Start_IT(&htim2);
-//	HAL_ADC_Start_IT(&hadc1);
+	//r[0] = ' ';
   /* USER CODE END 2 */
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-//	myTicks = 0;
-	uint8_t r[1];
-	uint32_t sum = 0;
-	//out[2];
-	char out[7];
-	char out2[7];
-	//write= ((float)adc_value *3.3) / (1.0*(pow(2,12)-1.0));
-	char e[] = "BPM: ";
-	float write = 0.0;
-	float val  = 0.0;
-	int counter = 0;
-	int flag = 0;
-	r[0] = ' ';
+
   while (1)
   {
-		if(myTick<60000)
-		{
-			HAL_ADC_Start(&hadc1); //Start ADC
-			HAL_ADC_PollForConversion(&hadc1,100); // wait for conversion to complete
-			adc_value = HAL_ADC_GetValue(&hadc1); //get the value
-			HAL_ADC_Stop(&hadc1); // stop adc
-			HAL_Delay(500);
-				if(adc_value!=0)
-					counter++;
-			sprintf(out,"%d",adc_value);
-			out[6] = ' ';
-			HAL_UART_Transmit(&huart1,(uint8_t *) out,sizeof(out),10);
-			HAL_UART_Transmit(&huart1,&r[0],1,10);
-			if(myTick >= 60000)
-			{
-				sprintf(out2,"%d",counter);
-				HAL_UART_Transmit(&huart1,(uint8_t *) e,sizeof(e),10);
-				HAL_UART_Transmit(&huart1,(uint8_t *) out2,sizeof(out2),10);
-			}			
-		}
-	//}
-	
+
+	}
     /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
-//		HAL_ADC_Start(&hadc1); //Start ADC
-//		HAL_ADC_PollForConversion(&hadc1,100); // wait for conversion to complete
-//		adc_value = HAL_ADC_GetValue(&hadc1); //get the value
-//		HAL_ADC_Stop(&hadc1); // stop adc
-//		HAL_Delay(500);
-//		write= ((float)adc_value *3.3) / (1.0*(pow(2,12)-1.0));
-//		sprintf(out,"%f",write);
-//		out[6] = ' ';
-//		HAL_UART_Transmit(&huart1,(uint8_t *) out,sizeof(out),10);
-//		HAL_UART_Transmit(&huart1,&r[0],1,10);
-  }
   /* USER CODE END 3 */
 }
 
@@ -342,7 +343,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 9600;
+  huart1.Init.BaudRate = 128000;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;

@@ -20,7 +20,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <stdio.h>
 #include "stm32f1xx_it.h"
+#include "string.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -60,7 +62,11 @@ extern DMA_HandleTypeDef hdma_adc1;
 extern ADC_HandleTypeDef hadc1;
 extern TIM_HandleTypeDef htim2;
 extern UART_HandleTypeDef huart1;
-//extern int myTicks;
+extern int samplingrate;
+extern int start;
+extern char ss[];
+int n3 = 0;
+char g[100];
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -184,15 +190,14 @@ void PendSV_Handler(void)
   * @brief This function handles System tick timer.
   */
 //void SysTick_Handler(void)
-////{
-////  /* USER CODE BEGIN SysTick_IRQn 0 */
-////  /* USER CODE END SysTick_IRQn 0 */
-////	
-////  HAL_IncTick();
-////  /* USER CODE BEGIN SysTick_IRQn 1 */
+//{
+//  /* USER CODE BEGIN SysTick_IRQn 0 */
+//  /* USER CODE END SysTick_IRQn 0 */
+//  HAL_IncTick();
+//  /* USER CODE BEGIN SysTick_IRQn 1 */
 
-////  /* USER CODE END SysTick_IRQn 1 */
-////}
+//  /* USER CODE END SysTick_IRQn 1 */
+//}
 
 /******************************************************************************/
 /* STM32F1xx Peripheral Interrupt Handlers                                    */
@@ -246,14 +251,34 @@ void TIM2_IRQHandler(void)
 /**
   * @brief This function handles USART1 global interrupt.
   */
+int v = -1;
+
+int v2 = -1;
+
+
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-
+	v = -1;
+	v2 = -1;
+	//char g2[100];
+	//sscanf(ss,"%d",&v2);
+	HAL_UART_IRQHandler(&huart1);
   /* USER CODE END USART1_IRQn 0 */
-  HAL_UART_IRQHandler(&huart1);
-  /* USER CODE BEGIN USART1_IRQn 1 */
+	if(strcmp(ss ,"\r")==0)
+	{		
+		sscanf(g,"%d",&v);
+		samplingrate  = 1000/v;	
+		start = 1;
+		HAL_ADC_Start(&hadc1); //Start ADC
+	}
+	else
+	{
+				strcat(g,ss);
 
+	//sprintf(g,"%d",v2);
+	}
+  /* USER CODE BEGIN USART1_IRQn 1 */
   /* USER CODE END USART1_IRQn 1 */
 }
 
