@@ -1,34 +1,16 @@
-{\rtf1\ansi\ansicpg1252\cocoartf1671
-{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fswiss\fcharset0 Arial-BoldMT;\f2\fswiss\fcharset0 ArialMT;
-\f3\froman\fcharset0 TimesNewRomanPSMT;\f4\froman\fcharset0 TimesNewRomanPS-BoldMT;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww28600\viewh18000\viewkind0
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
-\f0\fs48 \cf0 HEART BEAT MONITOR\
-\pard\pardeftab720\ri-340\partightenfactor0
+Overview:
 
-\f1\b\fs24 \cf0 Overview:\
+ For my project I\'92ve chosen to implement a simple heart monitor, using the ECG Sensor AD8232, and STM32 Microcontroller. The Electrodes are placed on someone for the ECG to detect the heart beat, and then the output from the ECG Sensor is sent as an analog signal to the STM32 Microcontroller. There are two ADC\'92s located on the microcontroller, so I used the first ADC , and I connected the output from the sensor to it through pin A0. Then I perform the computation on the microcontroller and then the result is send to the PC using UART, where I display the heart beat live and then view the computed Beats Per Minute
+ 
+Hardware/Pins:
 
-\f2\b0 For my project I\'92ve chosen to implement a simple heart monitor, using the ECG Sensor AD8232, and STM32 Microcontroller. The Electrodes are placed on someone for the ECG to detect the heart beat, and then the output from the ECG Sensor is sent as an analog signal to the STM32 Microcontroller. There are two ADC\'92s located on the microcontroller, so I used the first ADC , and I connected the output from the sensor to it through pin A0. Then I perform the computation on the microcontroller and then the result is send to the PC using UART, where I display the heart beat live and then view the computed Beats Per Minute\
-\
+The ECG sensor outputs an analog signal, so I will use an ADC 3202/On Chip ADC, to convert the signal coming out of the ECG sensor before it is sent to the Microcontroller. \
+The ECG sensor has 15 pins. I will only be using 3-pins, GND, 3.3v, output. LO-, LO+, and SDN. LO-, and LO+ are leads -off comparators, LO- is always low, and LOD+ will be high. To detect leadoff, the ECG monitors the impedance between each differential-sensing electrode and the lead-off electrode.  The impendence measurement provides an input for measuring the respiration rate. The pint OUT outputs the fully conditioned heart. Rate signal which will be connected to an ADC. The also wont be using the SDN pin, because its useful only for low-power applications. So the LO-, LO+ and OUT pins will be inputs to the PC. 
 
-\f1\b Hardware/Pins \
-
-\f2\b0 The ECG sensor outputs an analog signal, so I will use an ADC 3202/On Chip ADC, to convert the signal coming out of the ECG sensor before it is sent to the Microcontroller. \
-The ECG sensor has 15 pins. I will only be using 3-pins, GND, 3.3v, output. LO-, LO+, and SDN. LO-, and LO+ are leads -off comparators, LO- is always low, and LOD+ will be high. To detect leadoff, the ECG monitors the impedance between each differential-sensing electrode and the lead-off electrode.  The impendence measurement provides an input for measuring the respiration rate. The pint OUT outputs the fully conditioned heart. Rate signal which will be connected to an ADC. The also wont be using the SDN pin, because its useful only for low-power applications. So the LO-, LO+ and OUT pins will be inputs to the PC. \
-\
-
-\f1\b Code Walkthrough
-\f2\b0 \
-\
-
-\f1\b C Code:
-\f2\b0 \
-\pard\pardeftab720\ri-340\partightenfactor0
-
-\f3 \cf0 In order for us to be able to time the data coming in and sample it for one minute, I used systick timer. So first of all I configure the Systick clock, by dividing the SystemCoreClocck by 1000, to transform it a millisecond delay between each consecutive ticks. Then in the SysTick Handler, I start incrementing a counter variable called myTick, that increments every millisecond. So to achieve a minute I need myTick to keep ticking until 60000, which means that I have read enough data for 1 minute. So what I do is poll for conversion using the ADC located on the micontroller and read the value from it. It reads the first sample and I have a flag which is set to one initially. Every time it detects a falling edge it is set to 1 and everytime theres a high edge higher than 2500 it is set to 0, and I do that so that I\'92d be able to get the Beats Per minute, wbich I will discuss more in details in the following sections. After that I transmit the value I received from the ADC to the terminal using UART. After I sample for one minute I transmit the beats per minute. \
+Code Walkthrough
+C Code:
+In order for us to be able to time the data coming in and sample it for one minute, I used systick timer. So first of all I configure the Systick clock, by dividing the SystemCoreClocck by 1000, to transform it a millisecond delay between each consecutive ticks. Then in the SysTick Handler, I start incrementing a counter variable called myTick, that increments every millisecond. So to achieve a minute I need myTick to keep ticking until 60000, which means that I have read enough data for 1 minute. So what I do is poll for conversion using the ADC located on the micontroller and read the value from it. It reads the first sample and I have a flag which is set to one initially. Every time it detects a falling edge it is set to 1 and everytime theres a high edge higher than 2500 it is set to 0, and I do that so that I\'92d be able to get the Beats Per minute, wbich I will discuss more in details in the following sections. After that I transmit the value I received from the ADC to the terminal using UART. After I sample for one minute I transmit the beats per minute. \
 \
 To be able to receive the user input for samples per second and I press enter then I receive using UART interrupts in the call back function, and after that in the UART Handler, I parse , in order to be able to get the sampling rate and I send it to the systick function. If we look at the code above you can. See to sample there\'92s an if statement , and I check if myTick%samplerate ==0 then I should sample.  In the UART Handler, after I receive the read sample from the call back function, I check if there is an enter sign , once there is an enter that means I\'92ve received completely the number needed for sampling rate. Then I divide a 1000 divided by the sampling rate received as an input , I set a start flag to one which starts the ticking in the systick function and after that I start the ADC. Here I start receiving the values from the ECG. I send the flag to the systick handler, where it starts ticking, where then the reading and conversion is done, and the computations are done.\
 \
