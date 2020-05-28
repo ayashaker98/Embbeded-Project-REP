@@ -1,9 +1,9 @@
 
-##Overview:
+Overview:
 
  For my project I\'92ve chosen to implement a simple heart monitor, using the ECG Sensor AD8232, and STM32 Microcontroller. The Electrodes are placed on someone for the ECG to detect the heart beat, and then the output from the ECG Sensor is sent as an analog signal to the STM32 Microcontroller. There are two ADC\'92s located on the microcontroller, so I used the first ADC , and I connected the output from the sensor to it through pin A0. Then I perform the computation on the microcontroller and then the result is send to the PC using UART, where I display the heart beat live and then view the computed Beats Per Minute
  
-##Hardware/Pins:
+Hardware/Pins:
 
 The ECG sensor outputs an analog signal, so I will use an ADC 3202/On Chip ADC, to convert the signal coming out of the ECG sensor before it is sent to the Microcontroller.
 The ECG sensor has 15 pins. I will only be using 3-pins, GND, 3.3v, output. LO-, LO+, and SDN. LO-, and LO+ are leads -off comparators, LO- is always low, and LOD+ will be high. To detect leadoff, the ECG monitors the impedance between each differential-sensing electrode and the lead-off electrode.  The impendence measurement provides an input for measuring the respiration rate. The pint OUT outputs the fully conditioned heart. Rate signal which will be connected to an ADC. The also wont be using the SDN pin, because its useful only for low-power applications. So the LO-, LO+ and OUT pins will be inputs to the PC. 
